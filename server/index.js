@@ -26,8 +26,8 @@ const allowedOrigins = [
     // --- CLOUD PRODUCTION DOMAINS ---
     'https://jjcetcollegeportal.vercel.app', 
     'https://portal-one-mocha.vercel.app', 
-    'https://portal-git-main-shanugeth2303s-projects.vercel.app',
-    'https://portal-jjd.onrender.com' 
+    'https://portal-git-main-shanugesh2303s-projects.vercel.app',
+    'https://portal-lxfd.onrender.com' 
 ];
 
 const corsOptions = {
