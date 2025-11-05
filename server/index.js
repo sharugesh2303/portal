@@ -14,33 +14,32 @@ const app = express();
 const port = process.env.PORT || 8000;
 
 // =======================================================
-// --- CRITICAL CORS CONFIGURATION (Final and Secure) ---
+// --- CRITICAL CORS CONFIGURATION (Final Origin List) ---
 // =======================================================
 // Define ALL domains allowed to request resources from this server.
 const allowedOrigins = [
-    // 1. New, Definitive Vercel Alias:
+    // --- LOCALHOST DEVELOPMENT DOMAINS (UPDATED) ---
+    'http://localhost:3000', // Common port for React Dev
+    'http://localhost:8000', // Your local backend port
+    'http://localhost:5173', // <--- NEW FIX: Your current frontend development port
+    
+    // --- CLOUD PRODUCTION DOMAINS ---
     'https://jjcetcollegeportal.vercel.app', 
-    
-    // 2. Previous Aliases (Kept for safety/testing domains):
     'https://portal-one-mocha.vercel.app', 
-    'https://portal-git-main-sharugeth2303s-projects.vercel.app',
-    
-    // 3. Your Render Backend Domain (The host of this API):
+    'https://portal-git-main-shanugeth2303s-projects.vercel.app',
     'https://portal-jjd.onrender.com' 
 ];
 
 const corsOptions = {
     origin: (origin, callback) => {
-        // Allow requests if they come from an allowed origin (or if they have no origin, e.g., Postman)
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            // Block the request
             callback(new Error('Not allowed by CORS policy. Origin rejected.'), false);
         }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true // Crucial for sending authentication tokens/headers
+    credentials: true
 };
 
 // Apply the configured CORS middleware
@@ -54,6 +53,7 @@ app.use(express.json());
 // --- API Routes ---
 app.use('/api/auth', authRoutes);
 app.use('/api/faculty', facultyRoutes);
+app.use('/api/faculty', facultyRoutes); // (Keeping the faculty route separate if needed)
 app.use('/api/salary', salaryRoutes);
 
 // --- Database Connection ---
