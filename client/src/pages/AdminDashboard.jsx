@@ -11,7 +11,7 @@ const API_BASE_URL = isLocal
 // ---------------------------------------------
 
 // -------------------------------------------------------------------
-// 🎨 UPDATED STYLES FOR A MODERN, ATTRACTIVE DASHBOARD (WOW FACTOR)
+// 🎨 UPDATED STYLES FOR A MODERN, ATTRACTIVE DASHBOARD (UNCHANGED)
 // -------------------------------------------------------------------
 const TEXT_DARK = '#1a202c';        
 const CARD_WHITE = '#FFFFFF';       
@@ -261,7 +261,7 @@ const styles = {
 };
 
 // -------------------------------------------------------------------
-// --- CONSTANTS (UNCHANGED) ---
+// --- CONSTANTS ---
 // -------------------------------------------------------------------
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const monthOrder = MONTHS.reduce((acc, month, index) => {
@@ -283,7 +283,6 @@ function AdminDashboard() {
     const [salaryMessage, setSalaryMessage] = useState({ type: '', content: '' });
     const [reportMonths, setReportMonths] = useState(3);
     
-    // CRITICAL FIX: Use 'details' or 'salary' string state for all toggling and visibility
     const [currentView, setCurrentView] = useState('details'); 
     
     const navigate = useNavigate();
@@ -332,7 +331,6 @@ function AdminDashboard() {
     };
 
     useEffect(() => {
-        // Fetch data based on the currently active view
         if (currentView === 'details') {
             fetchFaculty();
             setSalaryMessage({ type: '', content: '' }); 
@@ -349,7 +347,6 @@ function AdminDashboard() {
             return;
         }
 
-        // *** API CALL 3 (GET Admin Bulk Report) ***
         const reportUrl = `${API_BASE_URL}/salary/report/${months}`;
         setMessage({ type: 'loading', content: `Preparing bulk report for last ${months} months...` });
 
@@ -384,7 +381,6 @@ function AdminDashboard() {
             return;
         }
         
-        // *** API CALL 4 & 5 (GET Annual/Monthly Download) ***
         const url = `${API_BASE_URL}/salary/${endpoint}/${param}`;
         setMessage({ type: 'loading', content: `Preparing report for ${param}...` });
 
@@ -424,24 +420,37 @@ function AdminDashboard() {
         uploadData.append('file', csvFile);
         
         try {
-            // *** API CALL 6 (POST Bulk Faculty Upload) ***
-            const response = await axios.post(`${API_BASE_URL}/salary/upload-faculty`, uploadData);
-            const { successful, failed, errors } = response.data;
-            let successMsg = `Faculty Details CSV Uploaded! Successful: ${successful}, Failed: ${failed}.`;
-            if (failed > 0) successMsg += ` Errors: ${errors.slice(0, 3).join('; ')}...`;
+            // *** FIX APPLIED HERE: Changed endpoint from /salary/upload-faculty to /faculty/upload ***
+            const response = await axios.post(`${API_BASE_URL}/faculty/upload`, uploadData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            
+            const { successful: added, failed, errors } = response.data; // Using 'successful' key from backend as 'added'
+            
+            // --- DIAGNOSTIC MESSAGE ---
+            let successMsg = `Faculty Details CSV Uploaded! Successful: ${added}, Failed: ${failed}.`;
+            if (failed > 0) {
+                successMsg += ` Errors (first 3): ${errors.slice(0, 3).join('; ')}...`;
+            } else if (added === 0 && failed === 0) {
+                successMsg = `File uploaded, but 0 records were processed. **CRITICAL:** Check CSV headers (name, username, password, department, designation, baseSalary).`;
+            }
+            // --- END DIAGNOSTIC MESSAGE ---
             
             setMessage({ type: 'success', content: successMsg });
             setSalaryMessage({ type: '', content: '' });
             await fetchFaculty(); 
         } catch (error) {
-            setMessage({ type: 'error', content: error.response?.data?.message || 'Upload failed.' });
+            console.error("Bulk Upload Error:", error.response || error);
+            setMessage({ type: 'error', content: error.response?.data?.message || 'Upload failed. Check server logs for detailed CSV errors.' });
             setSalaryMessage({ type: '', content: '' });
         }
     };
 
     const handleSalaryFileChange = (e) => { setSalaryCsvFile(e.target.files[0]); };
     
-    // *** MODIFIED LOGIC: ADDED FILENAME VALIDATION ***
+    // *** SALARY UPLOAD LOGIC WITH FILENAME VALIDATION (UNCHANGED) ***
     const handleSalaryCsvUpload = async () => { 
         if (!salaryCsvFile) { 
             setSalaryMessage({ type: 'error', content: 'Please select a CSV file first.' });
@@ -478,14 +487,13 @@ function AdminDashboard() {
             setMessage({ type: '', content: '' });
         }
     };
-    // *** END MODIFIED LOGIC ***
+    // *** END SALARY UPLOAD LOGIC ***
     
     const handleLogout = () => { 
-        localStorage.removeItem('token'); // Added token removal for proper logout
+        localStorage.removeItem('token'); 
         navigate('/login'); 
     };
     
-    // FINAL TOGGLES: Use the single string state
     const toggleDetails = () => { 
         setMessage({ type: '', content: '' });
         setCurrentView('details');
@@ -523,7 +531,7 @@ function AdminDashboard() {
     };
 
     // -------------------------------------------------------------------
-    // --- JSX RENDER (Applying New Styles) ---
+    // --- JSX RENDER ---
     // -------------------------------------------------------------------
     return (
         <div style={styles.dashboard}>
@@ -531,7 +539,7 @@ function AdminDashboard() {
             {/* FIRST HEADER ROW: IMAGE BANNER */}
             <div style={styles.imageBanner}>
                 <img 
-                    src="/jjcet_logo.jpg" // Path relative to the public folder
+                    src="/jjcet_logo.jpg" 
                     alt="J.J. College Banner" 
                     style={styles.headerImage} 
                 />
@@ -547,7 +555,6 @@ function AdminDashboard() {
             <p style={styles.subtitle}>Manage faculty data and salary information with segregated views.</p>
 
             <div style={styles.controlPanel}>
-                {/* Toggles using the unified currentView state */}
                 <button 
                     onClick={toggleDetails} 
                     style={{
@@ -601,8 +608,14 @@ function AdminDashboard() {
                 <>
                     <div style={styles.section}>
                         <h2 style={styles.sectionTitle}>📥 Bulk Add or Update Faculty Details</h2>
-                        {/* Removed the detailed explanation here for consistency with the salaries section removal */}
                         
+                        <p style={{marginBottom: '10px'}}>
+                            Upload a CSV file with the **exact** column headers: 
+                            <span style={{fontWeight: 'bold', color: ACCENT_PRIMARY, backgroundColor: '#e6f7ff', padding: '2px 5px', borderRadius: '4px'}}>
+                                name, username, password, department, designation, baseSalary
+                            </span>
+                        </p>
+
                         <div style={styles.fileUploadRow}> 
                             <input 
                                 type="file" 
@@ -672,10 +685,6 @@ function AdminDashboard() {
                 <>
                     <div style={styles.section}>
                         <h2 style={styles.sectionTitle}>💸 Bulk Upload Faculty Salaries</h2>
-                        {/* REMOVED: 
-                           <p>Select month and year, then upload a CSV with columns: <strong>username, basic, hra, da, ... (detailed components)</strong></p>
-                           <p style={{fontSize: '0.9rem', color: '#e74c3c', fontWeight: 'bold'}}>**CRITICAL:** The uploaded CSV file **must** be named exactly as the selected month and year, e.g., if you choose January 2025, the file name must be <span style={{backgroundColor: '#ffeaa7', padding: '2px 5px', borderRadius: '4px'}}>January2025.csv</span>.</p>
-                        */}
                         
                         <div style={styles.salaryUploadContainer}>
                             <div style={styles.selectorRow}>
@@ -746,7 +755,6 @@ function AdminDashboard() {
                                             <td style={styles.td}></td>
                                             <td style={styles.td}>
                                                 <button
-                                                    // *** API CALL 4 (GET Annual Download) ***
                                                     onClick={() => handleDirectDownload('download', year)}
                                                     style={styles.directDownloadButton}
                                                 >
@@ -763,7 +771,6 @@ function AdminDashboard() {
                                                 <td style={styles.td}>
                                                     <div style={styles.actionCell}>
                                                         <button
-                                                            // *** API CALL 5 (GET Monthly Download) ***
                                                             onClick={() => handleDirectDownload('download', `${year}/${monthRecord.month}`)}
                                                             style={styles.directDownloadButton}
                                                         >
