@@ -11,6 +11,8 @@ const API_BASE_URL = isLocal
     ? 'http://localhost:8000/api'
     : 'https://portal-lxfd.onrender.com/api'; // <--- PRODUCTION RENDER URL
 
+const BACKEND_URL = API_BASE_URL.replace('/api', ''); // Base URL without the /api suffix
+
 // --- STYLES ---
 const loginStyles = {
     // Styles for the whole page/background
@@ -130,10 +132,10 @@ const loginStyles = {
         fontWeight: 'bold',
         // Creating the glow effect with multiple text shadows
         textShadow: `
-            0 0 5px #76EEF9,   /* Inner glow */
-            0 0 10px #76EEF9,  /* Medium glow */
-            0 0 20px #76EEF9,  /* Outer glow */
-            0 0 30px #00FFFF    /* Strongest outer glow, slightly different shade */
+            0 0 5px #76EEF9, 
+            0 0 10px #76EEF9, 
+            0 0 20px #76EEF9, 
+            0 0 30px #00FFFF 
         `,
     }
 };
@@ -188,8 +190,8 @@ function LoginPage() {
             if (error.response) {
                 setMessage(`Error: ${error.response.data.message}`); 
             } else {
-                // Show a more specific message if it's a network error during local development
-                setMessage(`Error: Could not connect to server. Check if the backend is running on ${API_BASE_URL.replace('/api', '')}.`);
+                // FIX APPLIED: Use the centralized BACKEND_URL variable for the error message
+                setMessage(`Error: Could not connect to server. Check if the backend is running on ${BACKEND_URL}.`);
             }
         }
     };
